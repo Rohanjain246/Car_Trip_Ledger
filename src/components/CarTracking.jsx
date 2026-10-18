@@ -59,7 +59,7 @@ export default function CarTracker() {
       setEntries(sheet.entries);
       if (sheet.title) setTitle(sheet.title);
     } catch {
-      setMsg({ type: "err", text: "Could not load saved entries. Check SCRIPT_URL in api.js." });
+      setMsg({ type: "err", text: "Could not load saved entries. Check VITE_SCRIPT_URL in .env.local." });
     }
   };
   useEffect(() => { refresh(); }, []);
