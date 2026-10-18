@@ -743,7 +743,8 @@
 .ct input[type="date"],
 .ct input[type="text"],
 .ct input[type="number"],
-.ct input:not([type]) {
+.ct input:not([type]),
+.ct #summary-month {
   width: 100%;
   min-height: 48px;
   padding: 11px 14px;
@@ -768,6 +769,16 @@
   border-color: var(--accent);
   outline: none;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 17%, transparent);
+}
+
+.ct #summary-month:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 17%, transparent);
+}
+
+.ct #summary-month:hover {
+  border-color: var(--mute);
 }
 
 .ct input[type="checkbox"] {

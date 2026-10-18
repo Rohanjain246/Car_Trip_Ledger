@@ -6,6 +6,8 @@ const YELLANKA_NON_ESCORT_AMOUNT = 580;
 const ESCORT_AMOUNT = 870;           // sheet counts 870 as "Yellanka escort"
 
 const sum = (a) => a.reduce((x, y) => x + y, 0);
+const hasValidAmount = (value) =>
+  value !== "" && value != null && Number.isFinite(Number(value));
 const KEYS = [
   "totalTrips", "cngFills", "paidCount", "tripAmount", "cngAmount", "profit",
   "paidAmount", "remaining", "yellankaCount", "escortCount", "yellankaAmount",
@@ -15,10 +17,10 @@ const KEYS = [
 // trips: [{ amount, paid }], cng: [amount, ...] (blank values are ignored)
 export function calcEntry(trips, cng) {
   const t = trips
-    .filter((r) => r.amount !== "" && r.amount != null)
+    .filter((r) => hasValidAmount(r.amount))
     .map((r) => ({ amount: Number(r.amount), paid: !!r.paid }));
   const c = cng
-    .filter((v) => v !== "" && v != null)
+    .filter((v) => hasValidAmount(typeof v === "object" ? v.amount : v))
     .map((v) => Number(typeof v === "object" ? v.amount : v));
 
   const tripAmount = sum(t.map((r) => r.amount));

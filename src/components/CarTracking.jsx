@@ -129,12 +129,13 @@ function PalettePicker({ palette, onChange }) {
   );
 }
 
-export default function CarTracker() {
+export default function CarTracker({ isAdmin = false }) {
   const [date, setDate] = useState(TODAY);
   const [day, setDay] = useState(() => DAYS[new Date(`${TODAY}T00:00:00`).getDay()]);
   const [trips, setTrips] = useState([newTrip()]);
   const [cngs, setCngs] = useState([newCng()]);
   const [entries, setEntries] = useState([]);
+  const [summaryMonth, setSummaryMonth] = useState(MONTH);
   const [editing, setEditing] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const recordDialog = useRef(null);
@@ -197,14 +198,23 @@ export default function CarTracker() {
   );
   const hasRecordRange = Boolean(recordsFrom && recordsTo);
   const validRecordRange = hasRecordRange && recordsFrom <= recordsTo;
+  const hasPartialRecordRange = Boolean(recordsFrom || recordsTo) && !hasRecordRange;
+  const hasAdminRecordSelection = validRecordRange;
   const visibleRows = useMemo(
     () => validRecordRange
       ? rows.filter((row) => row.date >= recordsFrom && row.date <= recordsTo)
-      : [],
-    [rows, recordsFrom, recordsTo, validRecordRange]
+      : recordsFrom || recordsTo
+        ? []
+        : isAdmin
+          ? []
+          : rows.filter((row) => row.date.startsWith(summaryMonth)),
+    [rows, recordsFrom, recordsTo, validRecordRange, isAdmin, summaryMonth]
   );
   const selectedTotals = useMemo(() => summarize(visibleRows), [visibleRows]);
-  const monthRows = useMemo(() => rows.filter((row) => row.date.startsWith(MONTH)), [rows]);
+  const monthRows = useMemo(
+    () => rows.filter((row) => row.date.startsWith(summaryMonth)),
+    [rows, summaryMonth]
+  );
   const month = useMemo(() => summarize(monthRows), [monthRows]);
   const selectedRecordTrips = selectedRecord?.trips.map((trip, index) => ({ trip, index })) ?? [];
   const selectedYellankaTrips = selectedRecordTrips.filter(({ trip }) =>
@@ -213,7 +223,8 @@ export default function CarTracker() {
   const selectedOtherTrips = selectedRecordTrips.filter(({ trip }) =>
     ![580, 870].includes(Number(trip.amount))
   );
-  const monthLabel = CURRENT_MONTH_LABEL;
+  const monthLabel = RECORD_MONTHS.find((monthOption) => monthOption.key === summaryMonth)?.label
+    || CURRENT_MONTH_LABEL;
   const selectedDateLabel = date
     ? new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
       weekday: "long",
@@ -257,6 +268,10 @@ export default function CarTracker() {
 
   const save = async () => {
     if (!date) return fail("Choose a date.");
+    if (trips.some((trip) => trip.amount !== "" && !Number.isFinite(Number(trip.amount)))
+      || cngs.some((fill) => fill.amount !== "" && !Number.isFinite(Number(fill.amount)))) {
+      return fail("Trip and CNG amounts must be valid numbers.");
+    }
     if (!live.totalTrips && !live.cngFills) return fail("Add at least one trip or CNG fill.");
     if (entries.some((e) => e.date === date)) return fail("This date is already saved. Edit it in the sheet.");
 
@@ -282,6 +297,10 @@ export default function CarTracker() {
 
   const updateSavedEntry = async () => {
     if (!editing) return;
+    if (editing.trips.some((trip) => trip.amount !== "" && !Number.isFinite(Number(trip.amount)))
+      || editing.cngs.some((fill) => fill.amount !== "" && !Number.isFinite(Number(fill.amount)))) {
+      return fail("Trip and CNG amounts must be valid numbers.");
+    }
     if (!editLive.totalTrips && !editLive.cngFills) return fail("Add at least one trip or CNG fill.");
 
     setBusy(true);
@@ -374,6 +393,8 @@ export default function CarTracker() {
         </div>
       </header>
 
+      {isAdmin && (
+        <>
       <section className="card">
         <div className="two">
           <div>
@@ -485,7 +506,23 @@ export default function CarTracker() {
       <button type="button" className="save" disabled={busy} onClick={save}>
         {busy ? "Saving…" : "Save to sheet"}
       </button>
+        </>
+      )}
 
+      {!isAdmin && (
+        <section className="card">
+          <label htmlFor="summary-month">Choose a month</label>
+          <select
+            id="summary-month"
+            value={summaryMonth}
+            onChange={(event) => setSummaryMonth(event.target.value)}
+          >
+            {RECORD_MONTHS.map((monthOption) => (
+              <option key={monthOption.key} value={monthOption.key}>{monthOption.label}</option>
+            ))}
+          </select>
+        </section>
+      )}
       <h2 className="gap">{monthLabel} totals <button className="link" onClick={refresh}>Refresh</button></h2>
       <section className="card">
         <Stats items={[
@@ -504,8 +541,10 @@ export default function CarTracker() {
         ]} />
       </section>
 
-      <h2 className="gap">Previous records</h2>
-      <section className="card record-controls">
+      {isAdmin && (
+        <>
+          <h2 className="gap">Filter previous records</h2>
+          <section className="card record-controls">
         <div>
           <label htmlFor="records-from">From</label>
           <input id="records-from" type="date" value={recordsFrom}
@@ -544,7 +583,7 @@ export default function CarTracker() {
             ))}
           </div>
         </div>
-      </section>
+          </section>
 
       {validRecordRange && (
         <section className="card">
@@ -567,13 +606,26 @@ export default function CarTracker() {
         </section>
       )}
 
+        </>
+      )}
+
+      <h2 className="gap">{isAdmin ? "Previous records" : `${monthLabel} records`}</h2>
       <section className="card wrap">
         <table>
           <thead>
-            <tr><th>Date</th><th>Day</th><th>Trips</th><th>Trip amt</th><th>CNG</th><th>Profit</th><th>Yellanka  (escort)</th><th>Action</th></tr>
+            <tr>
+              <th>Date</th><th>Day</th><th>Trips</th><th>Trip amt</th><th>CNG</th><th>Profit</th><th>Yellanka (escort)</th>
+              {isAdmin && <th>Action</th>}
+            </tr>
           </thead>
           <tbody>
-            {!hasRecordRange && (
+            {isAdmin && !hasAdminRecordSelection && !hasPartialRecordRange && (
+              <tr><td colSpan="8">Choose a month or complete date range to load records.</td></tr>
+            )}
+            {!isAdmin && !hasRecordRange && visibleRows.length === 0 && (
+              <tr><td colSpan="7">No saved records for this month.</td></tr>
+            )}
+            {hasPartialRecordRange && (
               <tr><td colSpan="8">Choose both a From and To date to view records.</td></tr>
             )}
             {hasRecordRange && !validRecordRange && (
@@ -595,10 +647,10 @@ export default function CarTracker() {
                 <td>{r.date.slice(8)}/{r.date.slice(5, 7)}/{r.date.slice(0, 4)}</td><td>{r.day}</td><td>{r.totalTrips}</td>
                 <td>{inr(r.tripAmount)}</td><td>{inr(r.cngAmount)}</td><td>{inr(r.profit)}</td>
                 <td>{r.yellankaCount} ({r.escortCount})</td>
-                <td><button type="button" className="link" onClick={(event) => {
-                  event.stopPropagation();
-                  startEditing(r);
-                }}>Edit</button></td>
+                {isAdmin && <td><button type="button" className="link" onClick={(event) => {
+                    event.stopPropagation();
+                    startEditing(r);
+                  }}>Edit</button></td>}
               </tr>
             ))}
           </tbody>
@@ -706,17 +758,19 @@ export default function CarTracker() {
               <strong>Profit {inr(selectedRecord.profit)}</strong>
             </section>
 
-            <button type="button" className="save" onClick={() => {
-              recordDialog.current?.close();
-              startEditing(selectedRecord);
-            }}>
-              Edit this record
-            </button>
+            {isAdmin && (
+              <button type="button" className="save" onClick={() => {
+                recordDialog.current?.close();
+                startEditing(selectedRecord);
+              }}>
+                Edit this record
+              </button>
+            )}
           </>
         )}
       </dialog>
 
-      {editing && (
+      {isAdmin && editing && (
         <section className="card edit-form">
           <h2>Edit entry · {editing.date}</h2>
           <label htmlFor="edit-day">Day</label>

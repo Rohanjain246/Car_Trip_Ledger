@@ -1,78 +1,31 @@
-# React + TypeScript + Vite
+# DriveLog Car Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A car-tracking portal for recording daily trips, payments, and fuel fills. It includes MongoDB-backed accounts, secure sessions, and role-based admin access.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Install Node.js and run `npm install`.
+2. Start MongoDB locally or create a MongoDB Atlas database.
+3. Copy `.env.example` to `.env`. Set `MONGODB_URI` to your database and replace `JWT_SECRET` with a random secret of at least 32 characters. Keep `.env` private and never commit it.
+4. In one terminal run `npm run server`.
+5. In another terminal run `npm run dev`, then open the Vite URL shown in the terminal.
 
-## React Compiler
+Vite proxies `/api` to the backend on port 4000. For production, serve the frontend and API on the same origin (or configure a same-site reverse proxy); the session cookie is HTTP-only and SameSite strict.
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Create the first administrator
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+Public sign-up always creates a regular user. Users can view their profile and read monthly tracker totals. Provision an administrator from a trusted machine using:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+ADMIN_PASSWORD='use-a-unique-password-of-at-least-12-characters' npm run create-admin -- admin@example.com "Admin Name"
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+The admin password is read from the environment and only its bcrypt hash is stored. Avoid saving real passwords in shell history. The command creates or promotes the specified account; run it only for an identity you have verified.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Admins can enter and edit trips and fuel fills, choose a month or date range to load matching previous records, and open the People & access directory to view registered accounts and their roles. No historical records load in the admin view until a month or complete date range is selected. The overview includes a current-month Yellanka-trip donut split into escort (₹870), non-escort (₹580), and other non-Yellanka trip amounts. Regular users have a read-only tracker summary, can choose the current or any previous month for its totals, and can open that month's previous-record details. They do not see trip/CNG entry controls or admin-wide history filters. Registration cannot grant admin privileges.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Data and access
 
-```
+Names and email addresses are stored as ordinary readable MongoDB fields. Passwords are never stored in readable or decryptable form; they are hashed with bcrypt. Roles are assigned by the server, and admin API requests verify the current database role on every request. User sessions expire after eight hours.
+
+The tracker reads and writes its configured Google Apps Script sheet. It loads monthly tabs ending in `Tracker` or `Tracking` (for example, `June_Tracker` or `October Tracking`). That sheet is shared by all signed-in users and admins; portal sign-in does not partition tracker records by account or make them private to an individual user. The role-based tracker views are a portal display rule, not a data-access boundary for anyone with direct access to the Apps Script sheet or endpoint.

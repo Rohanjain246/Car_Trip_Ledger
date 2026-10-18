@@ -43,7 +43,7 @@ function getSheet() {
 
 // Used to load and search across all monthly tracking tabs.
 function getTrackingSheets(ss) {
-  return ss.getSheets().filter((sheet) => /_Tracking$/i.test(sheet.getName()));
+  return ss.getSheets().filter((sheet) => /(?:^|[\s_-])track(?:er|ing)$/i.test(sheet.getName()));
 }
 
 function ensureSheetLayout(sh) {
@@ -106,7 +106,7 @@ function sheetPeriod(sh) {
 
   const text = (title + " " + sh.getName()).toLowerCase();
   const month = MONTH_NAMES.findIndex((name) => text.indexOf(name) !== -1) + 1;
-  const year = /\b(20\d{2})\b/.exec(title);
+  const year = /\b(20\d{2})\b/.exec(text);
   return month && year ? { month, year: Number(year[1]) } : null;
 }
 
