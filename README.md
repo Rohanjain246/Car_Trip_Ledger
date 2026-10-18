@@ -10,7 +10,9 @@ A car-tracking portal for recording daily trips, payments, and fuel fills. It in
 4. In one terminal run `npm run server`.
 5. In another terminal run `npm run dev`, then open the Vite URL shown in the terminal.
 
-Vite proxies `/api` to the backend on port 4000. For production, serve the frontend and API on the same origin (or configure a same-site reverse proxy); the session cookie is HTTP-only and SameSite strict.
+Vite proxies `/api` to the backend on port 4000 during local development. For a separately deployed frontend and API, set the frontend build variable `VITE_API_URL` to the API origin and set the API's `FRONTEND_ORIGIN` to the exact frontend origin (scheme and host, no trailing slash). The API allows credentialed CORS only from configured frontend origins. Production session cookies use `Secure` and `SameSite=None` so cross-origin frontend/API deployments can send the HTTP-only session cookie.
+
+For Render, set `VITE_API_URL=https://drivelog-api-5rw9.onrender.com` in the frontend service before its build, and set `FRONTEND_ORIGIN` in the API service to the frontend's public URL, for example `https://your-frontend.onrender.com`. Redeploy both services after changing these settings. Keep `MONGODB_URI` and `JWT_SECRET` configured only on the API service; `VITE_API_URL` is public frontend configuration.
 
 ## Create the first administrator
 

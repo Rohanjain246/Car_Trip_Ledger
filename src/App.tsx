@@ -24,6 +24,7 @@ type DonutSummaryProps = {
 
 const today = new Date();
 const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
 const monthlyTripCache = new Map<string, MonthlyTripData>();
 const monthlyTripRequests = new Map<string, Promise<MonthlyTripData>>();
 
@@ -209,7 +210,7 @@ function MonthlyTripChart() {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
     headers: {
