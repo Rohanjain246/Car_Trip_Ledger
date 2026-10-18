@@ -2,12 +2,14 @@
 export const MAX_TRIPS = 8; // Trip 1..8
 export const MAX_CNG = 3;   // CNG Fill 1..3
 const YELLANKA_AMOUNTS = [580, 870]; // sheet counts these amounts as Yellanka trips
+const YELLANKA_NON_ESCORT_AMOUNT = 580;
 const ESCORT_AMOUNT = 870;           // sheet counts 870 as "Yellanka escort"
 
 const sum = (a) => a.reduce((x, y) => x + y, 0);
 const KEYS = [
   "totalTrips", "cngFills", "paidCount", "tripAmount", "cngAmount", "profit",
   "paidAmount", "remaining", "yellankaCount", "escortCount", "yellankaAmount",
+  "yellankaNonEscortAmount", "yellankaEscortAmount", "otherTripsAmount",
 ];
 
 // trips: [{ amount, paid }], cng: [amount, ...] (blank values are ignored)
@@ -36,6 +38,9 @@ export function calcEntry(trips, cng) {
     yellankaCount: y.length,
     escortCount: t.filter((r) => r.amount === ESCORT_AMOUNT).length,
     yellankaAmount: sum(y.map((r) => r.amount)),
+    yellankaNonEscortAmount: sum(t.filter((r) => r.amount === YELLANKA_NON_ESCORT_AMOUNT).map((r) => r.amount)),
+    yellankaEscortAmount: sum(t.filter((r) => r.amount === ESCORT_AMOUNT).map((r) => r.amount)),
+    otherTripsAmount: sum(t.filter((r) => !YELLANKA_AMOUNTS.includes(r.amount)).map((r) => r.amount)),
   };
 }
 
@@ -46,7 +51,5 @@ export function summarize(list) {
     ...s,
     days: list.length,
     toPayWithoutCng: s.tripAmount - s.paidAmount,
-    withoutYellanka: s.tripAmount - s.yellankaAmount,
-    withoutYellankaToPay: s.tripAmount - s.yellankaAmount - s.paidAmount,
   };
 }

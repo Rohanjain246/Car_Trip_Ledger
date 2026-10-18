@@ -1075,6 +1075,10 @@
   font-size: 0.9rem;
 }
 
+.ct .detail-group h3.detail-group-other {
+  color: var(--cng);
+}
+
 .ct .detail-group-count {
   padding: 3px 9px;
   border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));

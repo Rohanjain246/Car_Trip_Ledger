@@ -206,6 +206,13 @@ export default function CarTracker() {
   const selectedTotals = useMemo(() => summarize(visibleRows), [visibleRows]);
   const monthRows = useMemo(() => rows.filter((row) => row.date.startsWith(MONTH)), [rows]);
   const month = useMemo(() => summarize(monthRows), [monthRows]);
+  const selectedRecordTrips = selectedRecord?.trips.map((trip, index) => ({ trip, index })) ?? [];
+  const selectedYellankaTrips = selectedRecordTrips.filter(({ trip }) =>
+    [580, 870].includes(Number(trip.amount))
+  );
+  const selectedOtherTrips = selectedRecordTrips.filter(({ trip }) =>
+    ![580, 870].includes(Number(trip.amount))
+  );
   const monthLabel = CURRENT_MONTH_LABEL;
   const selectedDateLabel = date
     ? new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
@@ -468,7 +475,7 @@ export default function CarTracker() {
         <h2>This entry</h2>
         <Stats items={[
           ["Profit (trips − CNG)", inr(live.profit)],
-          ["Paid", inr(live.paidAmount)],
+          ["Paid amount", inr(live.paidAmount)],
           ["Remaining to pay", inr(live.remaining)],
           ["Yellanka", `${live.yellankaCount} (${live.escortCount} escort)`],
         ]} />
@@ -487,13 +494,13 @@ export default function CarTracker() {
           ["Trip amount", inr(month.tripAmount)],
           ["CNG amount", inr(month.cngAmount)],
           ["Profit", inr(month.profit)],
-          ["Paid", inr(month.paidAmount)],
+          ["Paid amount", inr(month.paidAmount)],
           ["Remaining to pay", inr(month.remaining)],
-          ["To pay without CNG", inr(month.toPayWithoutCng)],
+          ["Other trips", inr(month.otherTripsAmount)],
           ["Yellanka trips", `${month.yellankaCount} (${month.escortCount} escort)`],
+          ["Yellanka non-escort", inr(month.yellankaNonEscortAmount)],
+          ["Yellanka with escort", inr(month.yellankaEscortAmount)],
           ["Yellanka amount", inr(month.yellankaAmount)],
-          ["Without Yellanka", inr(month.withoutYellanka)],
-          ["Without Yellanka to pay", inr(month.withoutYellankaToPay)],
         ]} />
       </section>
 
@@ -551,11 +558,11 @@ export default function CarTracker() {
             ["Profit", inr(selectedTotals.profit)],
             ["Paid Amount", inr(selectedTotals.paidAmount)],
             ["Remaining to pay", inr(selectedTotals.remaining)],
-            ["To pay without CNG", inr(selectedTotals.toPayWithoutCng)],
+            ["Other trips", inr(selectedTotals.otherTripsAmount)],
             ["Yellanka trips", `${selectedTotals.yellankaCount} (${selectedTotals.escortCount} escort)`],
+            ["Yellanka non-escort", inr(selectedTotals.yellankaNonEscortAmount)],
+            ["Yellanka with escort", inr(selectedTotals.yellankaEscortAmount)],
             ["Yellanka amount", inr(selectedTotals.yellankaAmount)],
-            ["Without Yellanka", inr(selectedTotals.withoutYellanka)],
-            ["Without Yellanka to pay", inr(selectedTotals.withoutYellankaToPay)],
           ]} />
         </section>
       )}
@@ -624,24 +631,46 @@ export default function CarTracker() {
 
             <section className="detail-group">
               <h3>
-                Trips
+                Yellanka trips
                 <span className="detail-group-count">
-                  {selectedRecord.totalTrips}
-                  {selectedRecord.escortCount > 0 && ` · ${selectedRecord.escortCount} escort`}
+                  {selectedYellankaTrips.length} · {inr(selectedRecord.yellankaAmount)}
                 </span>
               </h3>
-              {selectedRecord.trips.length === 0 ? (
-                <p className="detail-empty">No trips recorded.</p>
-              ) : selectedRecord.trips.map((trip, index) => (
+              {selectedYellankaTrips.length === 0 ? (
+                <p className="detail-empty">No Yellanka trips recorded.</p>
+              ) : selectedYellankaTrips.map(({ trip, index }) => (
                 <div
-                  className={`detail-line${Number(trip.amount) === 870 ? " detail-line-escort" : ""}`}
+                  className={`detail-line detail-line-yellanka${Number(trip.amount) === 870 ? " detail-line-escort" : ""}`}
                   key={`trip-${index}`}
                 >
                   <div>
                     <strong className="detail-trip-title">
                       Trip {index + 1}
-                      {Number(trip.amount) === 870 && <span className="escort-badge">Escort</span>}
+                      {Number(trip.amount) === 870 && <span className="escort-badge">Yellanka · Escort</span>}
                     </strong>
+                    <span>{trip.note || "No note"}</span>
+                  </div>
+                  <div className="detail-value">
+                    <strong>{inr(trip.amount)}</strong>
+                    <span>{trip.paid ? "Paid" : "Unpaid"}</span>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section className="detail-group">
+              <h3 className="detail-group-other">
+                Other trips
+                <span className="detail-group-count">
+                  {selectedOtherTrips.length} · {inr(selectedRecord.otherTripsAmount)}
+                </span>
+              </h3>
+              {selectedOtherTrips.length === 0 ? (
+                <p className="detail-empty">No other trips recorded.</p>
+              ) : selectedOtherTrips.map(({ trip, index }) => (
+                <div className="detail-line" key={`trip-${index}`}>
+                  <div>
+                    <strong className="detail-trip-title">Trip {index + 1}</strong>
                     <span>{trip.note || "No note"}</span>
                   </div>
                   <div className="detail-value">
