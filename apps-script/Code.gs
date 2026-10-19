@@ -220,6 +220,7 @@ function doGet() {
         entries.push({
           date: dateKey(top[0], timeZone, period),
           day: String(top[1]).trim(),
+          sheet: sh.getName(),
           trips,
           cng,
         });
@@ -260,7 +261,20 @@ function doPost(e) {
     let row;
 
     if (data.action === "update") {
-      for (const candidateSheet of getTrackingSheets(ss)) {
+      if (typeof data.sheet !== "string" || !data.sheet.trim()) {
+        return out({ ok: false, error: "A sheet is required to update an entry" });
+      }
+
+      const trackingSheets = getTrackingSheets(ss);
+      const candidateSheets = trackingSheets.filter(
+        (candidateSheet) => candidateSheet.getName() === data.sheet.trim()
+      );
+
+      if (candidateSheets.length === 0) {
+        return out({ ok: false, error: "No tracking sheet found named " + data.sheet.trim() });
+      }
+
+      for (const candidateSheet of candidateSheets) {
         const foundRow = findEntryRow(candidateSheet, data.date, timeZone);
         if (foundRow) {
           sh = candidateSheet;
@@ -270,7 +284,10 @@ function doPost(e) {
       }
 
       if (!row) {
-        return out({ ok: false, error: "No saved entry found for " + data.date });
+        return out({
+          ok: false,
+          error: "No saved entry found for " + data.date + " in " + data.sheet.trim(),
+        });
       }
     } else {
       sh = getSheet();

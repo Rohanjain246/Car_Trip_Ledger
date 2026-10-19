@@ -307,6 +307,7 @@ export default function CarTracker({ isAdmin = false }) {
     try {
       await updateEntry({
         date: editing.date,
+        sheet: editing.sheet,
         day: editing.day,
         trips: editing.trips.filter((trip) => trip.amount !== "").map((trip) => ({
           amount: Number(trip.amount), paid: trip.paid, note: trip.note,
@@ -315,6 +316,7 @@ export default function CarTracker({ isAdmin = false }) {
         cngNotes: editing.cngs.filter((fill) => fill.amount !== "").map((fill) => fill.note),
       });
       setEntries((current) => current.map((entry) => entry.date === editing.date
+        && entry.sheet === editing.sheet
         ? { ...entry, day: editing.day, trips: editing.trips, cng: editing.cngs }
         : entry));
       setEditing(null);
@@ -636,7 +638,7 @@ export default function CarTracker({ isAdmin = false }) {
             )}
             {visibleRows.map((r) => (
               <tr
-                key={r.date}
+                key={`${r.sheet}-${r.date}`}
                 className="record-row"
                 tabIndex={0}
                 role="button"
