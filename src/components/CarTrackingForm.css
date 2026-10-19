@@ -159,11 +159,11 @@
   position: absolute;
   z-index: 1;
   top: -12px;
-  left: calc(50% - 72px);
+  left: 0;
   width: 144px;
   color: #c85d83;
   filter: drop-shadow(0 8px 4px rgb(0 0 0 / 40%));
-  animation: car-bob 1.15s ease-in-out infinite;
+  animation: car-drive 3s linear infinite;
 }
 
 .ct-loading .loading-copy {
@@ -223,9 +223,9 @@
   to { transform: translateX(-70px); }
 }
 
-@keyframes car-bob {
-  0%, 100% { transform: translateY(0) rotate(-0.5deg); }
-  50% { transform: translateY(-3px) rotate(0.5deg); }
+@keyframes car-drive {
+  from { left: 0; transform: translate(-100%, 0) rotate(-0.5deg); }
+  to { left: 100%; transform: translate(0, 0) rotate(0.5deg); }
 }
 
 @keyframes progress-move {
@@ -624,7 +624,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ct-loading .road-dash,
-  .ct-loading .loading-car,
   .ct-loading .loading-progress span {
     animation: none;
   }
