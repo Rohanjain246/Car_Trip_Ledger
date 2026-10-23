@@ -225,14 +225,14 @@
   font-size: 11px;
 }
 
-.loading-car {
+.chatbot-loading-car {
   position: relative;
   width: 40px;
   height: 22px;
   animation: chatbot-drive 1.5s ease-in-out infinite;
 }
 
-.loading-car::before {
+.chatbot-loading-car::before {
   position: absolute;
   top: 7px;
   left: 2px;
@@ -243,7 +243,7 @@
   content: "";
 }
 
-.loading-car::after {
+.chatbot-loading-car::after {
   position: absolute;
   top: 3px;
   left: 13px;
@@ -254,8 +254,8 @@
   content: "";
 }
 
-.loading-car i,
-.loading-car b {
+.chatbot-loading-car i,
+.chatbot-loading-car b {
   position: absolute;
   z-index: 1;
   bottom: 0;
@@ -266,15 +266,15 @@
   background: var(--chat-accent);
 }
 
-.loading-car i {
+.chatbot-loading-car i {
   left: 7px;
 }
 
-.loading-car b {
+.chatbot-loading-car b {
   right: 5px;
 }
 
-.loading-car em {
+.chatbot-loading-car em {
   position: absolute;
   top: 10px;
   right: 1px;

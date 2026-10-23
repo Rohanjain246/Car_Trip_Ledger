@@ -4,26 +4,25 @@ import {
   currentMonthKey,
   getCachedMonthlyTripData,
   getMonthlyTripData,
+  monthlyTripMonthOptions,
   type MonthlyTripData,
 } from "../utils/monthlyTrips";
 
-const monthLabel = new Date(`${currentMonthKey}-01T00:00:00`).toLocaleDateString(undefined, {
-  month: "long",
-  year: "numeric",
-});
-
 export default function MonthlyTripChart() {
-  const [data, setData] = useState<MonthlyTripData | null>(() => getCachedMonthlyTripData(currentMonthKey));
-  const [status, setStatus] = useState<"loading" | "ready" | "error">(
-    getCachedMonthlyTripData(currentMonthKey) ? "ready" : "loading",
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthKey);
+  const [data, setData] = useState<MonthlyTripData | null>(
+    () => getCachedMonthlyTripData(currentMonthKey),
   );
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(() => (
+    getCachedMonthlyTripData(currentMonthKey) ? "ready" : "loading"
+  ));
   const [error, setError] = useState("");
   const [refreshError, setRefreshError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    getMonthlyTripData(currentMonthKey)
+    getMonthlyTripData(selectedMonth)
       .then((result) => {
         if (!cancelled) {
           setData(result);
@@ -33,18 +32,28 @@ export default function MonthlyTripChart() {
       })
       .catch((cause: unknown) => {
         if (!cancelled) {
+          setData(null);
           setError(cause instanceof Error ? cause.message : "Could not load trip totals.");
           setStatus("error");
         }
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [selectedMonth]);
+
+  function selectMonth(month: string) {
+    const cached = getCachedMonthlyTripData(month);
+    setSelectedMonth(month);
+    setData(cached);
+    setStatus(cached ? "ready" : "loading");
+    setError("");
+    setRefreshError("");
+  }
 
   async function refreshChart() {
     setRefreshing(true);
     setRefreshError("");
     try {
-      const result = await getMonthlyTripData(currentMonthKey, true);
+      const result = await getMonthlyTripData(selectedMonth, true);
       setData(result);
       setStatus("ready");
       setError("");
@@ -63,14 +72,24 @@ export default function MonthlyTripChart() {
           <h2 id="trip-chart-title">Yellanka trip breakdown</h2>
         </div>
         <div className="chart-header-actions">
-          <span className="chart-period">{monthLabel}</span>
+          <label className="chart-month-picker">
+            <select
+              value={selectedMonth}
+              onChange={(event) => selectMonth(event.target.value)}
+              aria-label="Choose snapshot month"
+            >
+              {monthlyTripMonthOptions.map(({ key, label }) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </label>
           <button className="chart-refresh" type="button" onClick={refreshChart} disabled={refreshing}
             aria-label="Refresh monthly trip chart">
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         </div>
       </div>
-      {status === "loading" ? <p className="chart-message">Loading this month’s trip details…</p>
+      {status === "loading" ? <p className="chart-message">Loading {monthlyTripMonthOptions.find(({ key }) => key === selectedMonth)?.label} trip details…</p>
         : status === "error" && !data ? <p className="form-error" role="alert">{error}</p>
           : (
             <div className="single-chart-breakdown">

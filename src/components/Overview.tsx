@@ -1,4 +1,5 @@
 import MonthlyTripChart from "./MonthlyTripChart";
+import MonthlyAmountsChart from "./MonthlyAmountsChart";
 import type { User } from "../types";
 
 export default function Overview({
@@ -48,6 +49,7 @@ export default function Overview({
         </section>
       </div>
       <MonthlyTripChart />
+      <MonthlyAmountsChart />
       <div className="security-note">
         <span className="security-icon" aria-hidden="true">✓</span>
         <div><strong>Your account is protected</strong><p>Your session uses a secure, HTTP-only authentication cookie.</p></div>

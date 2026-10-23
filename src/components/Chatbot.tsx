@@ -270,7 +270,7 @@ export default function Chatbot() {
             ))}
             {sending && (
               <div className="chatbot-loading" role="status" aria-label="Getting your answer">
-                <span className="loading-car"><i /><b /><em /></span>
+                <span className="chatbot-loading-car"><i /><b /><em /></span>
                 <span>Checking your trips…</span>
               </div>
             )}

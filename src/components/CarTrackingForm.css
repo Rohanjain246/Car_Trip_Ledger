@@ -623,12 +623,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ct-loading .road-dash,
-  .ct-loading .loading-progress span {
+  .ct-loading .road-dash {
     animation: none;
   }
-
-  .ct-loading .loading-progress span { width: 100%; }
 }
 
 .ct *,
