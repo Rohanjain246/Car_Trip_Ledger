@@ -9,6 +9,7 @@ import {
   requireAuth,
   setSessionCookie,
 } from "./auth.js";
+import { answerQuestion } from "./chatbot.js";
 
 const router = Router();
 const authLimiter = rateLimit({
@@ -17,6 +18,13 @@ const authLimiter = rateLimit({
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: { error: "Too many sign-in attempts. Try again in 15 minutes." },
+});
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { error: "Chat limit reached. Try again in 15 minutes." },
 });
 
 function validEmail(email) {
@@ -82,6 +90,24 @@ router.post("/auth/logout", (_request, response) => {
 
 router.get("/auth/me", requireAuth, (request, response) => {
   response.json({ user: publicUser(request.user) });
+});
+
+router.post("/chat", requireAuth, chatLimiter, async (request, response) => {
+  const { question } = request.body ?? {};
+  if (typeof question !== "string" || !question.trim() || question.length > 1000) {
+    return response.status(400).json({ error: "Enter a question up to 1,000 characters." });
+  }
+
+  try {
+    const answer = await answerQuestion(question.trim());
+    return response.json(answer);
+  } catch (error) {
+    const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 502;
+    console.error("Chat request failed:", error.message);
+    return response.status(statusCode).json({
+      error: error.message || "The assistant could not answer this question.",
+    });
+  }
 });
 
 router.get("/admin/users", requireAuth, requireAdmin, async (_request, response, next) => {

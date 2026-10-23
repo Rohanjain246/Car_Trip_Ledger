@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import CarTracker from "./components/CarTracking";
 import AdminPanel from "./components/AdminPanel";
 import AuthForm from "./components/AuthForm";
+import Chatbot from "./components/Chatbot";
 import Overview from "./components/Overview";
 import { request } from "./utils/api";
 import type { Palette, Theme, User } from "./types";
@@ -164,6 +165,7 @@ export default function App() {
         {page === "tracker" && <div className="tracker-wrap"><CarTracker isAdmin={user.role === "admin"} theme={theme} palette={palette} /></div>}
         {page === "admin" && user.role === "admin" && <AdminPanel />}
       </main>
+      <Chatbot />
     </div>
   );
 }
